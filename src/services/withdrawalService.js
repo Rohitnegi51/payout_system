@@ -85,3 +85,76 @@ export const initiateWithdrawal = async (userId, amount) => {
         session.endSession();
     }
 };
+
+export const recoverFailedWithdrawal = async (
+    withdrawalId,
+    status
+) => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const withdrawal = await Withdrawal.findById(withdrawalId).session(
+            session
+        );
+
+        if (!withdrawal) {
+            throw new Error("Withdrawal not found.");
+        }
+
+        if (withdrawal.status !== WITHDRAWAL_STATUS.PENDING) {
+            throw new Error("Withdrawal has already been processed.");
+        }
+
+        if (
+            ![
+                WITHDRAWAL_STATUS.FAILED,
+                WITHDRAWAL_STATUS.REJECTED,
+                WITHDRAWAL_STATUS.CANCELLED,
+            ].includes(status)
+        ) {
+            throw new Error("Invalid recovery status.");
+        }
+
+        withdrawal.status = status;
+        await withdrawal.save({ session });
+
+        await User.findByIdAndUpdate(
+            withdrawal.userId,
+            {
+                $inc: {
+                    walletBalance: withdrawal.amount,
+                },
+            },
+            { session }
+        );
+
+        await Transaction.create(
+            [
+                {
+                    userId: withdrawal.userId,
+                    type: TRANSACTION_TYPE.WITHDRAWAL_REFUND,
+                    transactionType: LEDGER_ENTRY.CREDIT,
+                    amount: withdrawal.amount,
+                    description: "Refund for failed withdrawal",
+                },
+            ],
+            { session }
+        );
+
+        await session.commitTransaction();
+
+        return withdrawal;
+
+    } catch (error) {
+
+        await session.abortTransaction();
+        throw error;
+
+    } finally {
+
+        session.endSession();
+
+    }
+};
