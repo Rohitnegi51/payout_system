@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { BRANDS } from "../constants/brands.js";
+import { SALE_STATUS } from "../constants/saleStatus.js";
 
 const saleSchema = new mongoose.Schema(
     {
@@ -11,14 +13,14 @@ const saleSchema = new mongoose.Schema(
 
         brand: {
             type: String,
-            enum: ["brand_1", "brand_2", "brand_3"],
+            enum: BRANDS,
             required: true,
         },
 
         status: {
             type: String,
-            enum: ["pending", "approved", "rejected"],
-            default: "pending",
+            enum: Object.values(SALE_STATUS),
+            default: SALE_STATUS.PENDING,
             index: true,
         },
 

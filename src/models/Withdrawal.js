@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { WITHDRAWAL_STATUS } from "../constants/withdrawalStatus.js";
 
 const withdrawalSchema = new mongoose.Schema(
   {
@@ -17,8 +18,8 @@ const withdrawalSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "success", "failed", "cancelled", "rejected"],
-      default: "pending",
+      enum: Object.values(WITHDRAWAL_STATUS),
+      default: WITHDRAWAL_STATUS.PENDING,
       index: true,
     },
 

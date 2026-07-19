@@ -1,4 +1,9 @@
 import mongoose from "mongoose";
+import {
+  TRANSACTION_TYPE,
+  LEDGER_ENTRY,
+  TRANSACTION_STATUS,
+} from "../constants/transactionTypes.js";
 
 const transactionSchema = new mongoose.Schema(
   {
@@ -12,23 +17,18 @@ const transactionSchema = new mongoose.Schema(
     saleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Sale",
+      default: null,
     },
 
     type: {
       type: String,
-      enum: [
-        "advance",
-        "final_payout",
-        "adjustment",
-        "withdrawal",
-        "withdrawal_refund",
-      ],
+      enum: Object.values(TRANSACTION_TYPE),
       required: true,
     },
 
     transactionType: {
       type: String,
-      enum: ["credit", "debit"],
+      enum: Object.values(LEDGER_ENTRY),
       required: true,
     },
 
@@ -40,8 +40,8 @@ const transactionSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "success", "failed"],
-      default: "success",
+      enum: Object.values(TRANSACTION_STATUS),
+      default: TRANSACTION_STATUS.SUCCESS,
     },
 
     description: {
